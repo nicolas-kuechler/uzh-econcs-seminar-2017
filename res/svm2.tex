@@ -1,0 +1,25 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\begin{document}
+	\begin{tikzpicture}
+	\begin{axis}[ 
+	axis lines = left,
+	xlabel=$\theta_{1}$,
+	ylabel=$\theta_{-1}$,
+	xmin=0, xmax=10,
+	ymin=0, ymax=10,
+	xmajorticks=false,
+	ymajorticks=false,
+	every axis x label/.style={at={(current axis.right of origin)},anchor=west},
+	every axis y label/.style={at={(current axis.north west)},above}
+	] 
+	\addplot [only marks, mark = +, mark size=5pt] coordinates {(6,1)(8.5,1.5)(9,4)}; 
+%	\addlegendentry{$g_{1}(\theta) = 1$}
+	\addplot [only marks, mark = -, mark size=5pt] coordinates {(1,6)(1.5,8.5)(4,9)};	
+%	\addlegendentry{$g_{1}(\theta) = 0$}
+	\addplot [domain=0:10]  {x}; 
+	\addplot [dashed,gray, domain=0:10]{x+4.5}; 
+	\addplot [dashed,gray, domain=0:10]  {x-4.5};
+	\end{axis}
+	\end{tikzpicture}
+\end{document}

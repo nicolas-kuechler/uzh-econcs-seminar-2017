@@ -1,0 +1,404 @@
+\documentclass[]{article}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage[mode=buildnew]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+\pgfplotsset{compat=newest}
+
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Java,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3
+}
+
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{max}}\;}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+
+%opening
+\title{Payment Rules through \\ Discriminant-Based Classifiers}
+\author{ by Paul D\"utting, Felix Fischer, Pichayut Jirapinyo, John K. Lai, \\Benjamin Lubin and David C. Parkes \\ \\ Manuscript by Nicolas K\"uchler}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\emph{Payment Rules through Discriminant-Based Classifiers} is a paper from 2012 where Paul D\"utting, Felix Fischer, Pichayut Jirapinyo, John K. Lai, Benjamin Lubin and David C. Parkes present a new method for constructing payment rules in \emph{Mechanism Design}.
+
+\noindent In \emph{Mechanism Design} we are looking at situations where agents hold private informations about their preferences over different outcomes. 
+Agents submit reports and the mechanism chooses an outcome and a payment.
+
+
+\subsection{Classical Approach for Mechanism Design}
+The classical approach is to start by imposing an incentive compatibility IC constraint (e.g. DSIC: dominant-strategy IC or BNIC: Bayesian-Nash IC) ensuring that agents report their preferences in equilibrium truthfully. Subject to that constraint, an outcome- and a payment rule are chosen. The classical approach however, brings some challenges:
+
+
+\paragraph{Analytical Complexity} It is difficult to find optimal mechanisms in \emph{multi-dimensional domains}, where agents private information is described through more than a single number.
+
+\paragraph{Exclusion of Mechanisms} Incentive compatibility as a hard constraint might preclude mechanisms with useful economic properties.
+
+\paragraph{Computational Complexity} Payment- or outcome rules can become computational intractable.
+
+
+\subsection{New Approach for Mechanism Design}
+In the new approach presented in the paper, we start from a given outcome rule g (e.g. optimal outcome rule) and a distribution over agent type profiles D. Then we use machine learning ML to identify a payment rule p that has good incentive properties relative to this outcome rule g. Instead of insisting on a hard incentive compatibility constraint, we minimize a metric called ex-post regret. This measures an agents regret reporting truthfully rather than any other false report that could have led to a personally preferred outcome.
+
+\begin{figure}[h]
+	\begin{tabular}{|c|c|}
+		\hline
+	\begin{subfigure}{0.46\textwidth}
+			\begin{tabular}{r l} 
+			\multicolumn{2}{l}{\textbf{Classical Approach}} \\
+			1.	& Impose IC constraint \\ 
+			2.	& Design outcome- and payment  \\ 
+				& rule subject to IC constraint
+			\end{tabular} 
+		\begin{center}
+		\includestandalone[width=1.05\textwidth]{res/oldApproach}
+	\end{center}
+		\label{fig:oldApproach}
+	\end{subfigure} &
+	\begin{subfigure}{.46\textwidth}
+		\begin{tabular}{r l} 
+			\multicolumn{2}{l}{\textbf{New Approach}} \Tstrut \\
+			1.	& Define outcome rule\\ 
+			2.	& Define type distribution  \\ 
+			3.	& Use ML to find payment rule \\ 
+		\end{tabular} 
+		\begin{center}
+		\includestandalone[width=0.9\textwidth]{res/newApproach}
+		\end{center}
+		\label{fig:newApproach}
+	\end{subfigure} \\
+\hline
+\end{tabular}
+\caption{Comparison of the two approaches for \emph{Mechanism Design}.}
+\label{fig:comparison}
+\end{figure}
+
+
+\section{Preliminaries}
+\subsection{Ex-Post Regret}
+The \emph{ex-post regret} an agent has for truthfully reporting in a given instance is the amount by which its utility could be increased through a misreport. Formally, the \emph{ex-post regret} of agent i, given true type $\theta_{i} \in \Theta_{i}$ and the other agents reported types $\theta'_{-i} \in \Theta_{-i}$ is:
+
+\begin{equation*}
+rgt_{i}(\theta_{i},\theta'_{-i}) = \max\limits_{\theta'_{i} \in \Theta_{i}} 
+\underbrace{u_{i}((\theta'_{i}, \theta'_{-i}), \theta_{i})}_{\mathclap{\text{utility misreport}}}
+- \underbrace{u_{i}((\theta_{i}, \theta'_{-i}), \theta_{i})}_{\mathclap{\text{utility truthful report}}}
+\end{equation*}
+
+\noindent When a mechanism has zero \emph{ex-post regret} for all inputs $(\theta_{i}, \theta_{-i})$, then it is \emph{strategyproof}. Apart from that, \emph{ex-post regret} does not have any further known direct implications for equilibrium properties. The support rather comes from a simple model, where agents face a certain cost for strategic behaviour. If this cost is higher than the \emph{ex-post regret}, then the agents are assumed to behave truthfully.
+
+
+\subsection{Ex-Post Violation of IR}
+Another concept that is useful to understand some of the material covered later is the \emph{ex-post violation of individual-rationality}. It occurs, when an agent ends up with negative utility when reporting his true type. This means that he would have preferred not taking part in the mechanism at all. Ending up with a non-negative utility simply leads to a violation of zero. Formally, the \emph{ex-post violation of individual-rationality} of agent i, given true type $\theta_{i} \in \Theta_{i}$ and the other agents reported types $\theta'_{-i} \in \Theta_{-i}$ is:
+
+\begin{equation*} 
+irv_{i}(\theta_{i}, \theta_{-i}') = |min(u_{i}((\theta_{i}, \theta_{-i}'), \theta_{i}),0)|
+\end{equation*}
+
+
+\section{Payment Rules from Multi-Class Classifiers}
+Now let's look at how the problem of multi-class-classification can be used to find a payment rule.
+For that we consider a simple mechanism; the \emph{Single Item Auction}. There are two possible outcomes  $o_{i}\in\{0,1\}$ for each bidder, either the item is allocated to agent i or it is not. Each agent reports his type  $\theta_{i}$, representing his value for the item, to the mechanism and the outcome rule allocates the item to the agent with the highest value.
+
+
+\subsection{Classification Problem}
+
+ Assuming agent symmetry, we focus on a partial outcome rule $g_{1}$ and train a classifier to mimic the outcome rule for agent 1. Agent symmetry means informally that the problem is the same for every agent and it is enough to only consider it from the perspective of one agent. 
+ 
+ \noindent To be able to train a classifier we need a finite set of training data. This can be generated by drawing types $\theta^k$ from the type distribution D and applying the outcome rule $g_{1}$.
+
+\begin{equation*}
+\text{training data: }\{(\theta^{1}, g_{1}(\theta^{1})),...,(\theta^{l}, g_{1}(\theta^{l}))\}
+\end{equation*}
+
+\noindent In figure \ref{fig:svm1} we see how such a training set with six samples could look like. Samples where type $\theta_{1}$ has a high value are labeled with outcome $o_{1}=1$ and samples where the other agents type is higher valued are labeled with outcome $o_{1}=0$.
+
+\noindent A \emph{Support Vector Machine SVM} can be used to learn a classifier h that separates the two outcomes by a decision boundary.
+There are infinitely many possible decision boundaries with the given data but as we see in figure \ref{fig:svm2} a \emph{SVM} chooses the one that informally speaking: \textit{"maximizes the width of the street"}.
+
+\begin{figure}[h]
+	\begin{subfigure}{.5\textwidth}
+		\includestandalone[width=1\textwidth]{res/svm1}
+		\caption{six samples of $\theta$ with their outcome}
+		\label{fig:svm1}
+	\end{subfigure}
+	\begin{subfigure}{.5\textwidth}
+		\includestandalone[width=1\textwidth]{res/svm2}
+		\caption{decision boundary separating samples}
+		\label{fig:svm2}
+	\end{subfigure}
+	\caption{SVM Classification Problem}
+\end{figure}
+
+\newpage
+\subsection{Discriminant-Based Classifiers}
+The key idea is that by imposing a special structure on the classifier, it is possible to derive a payment rule for the mechanism that has good incentive properties. So we define a classifier $h_{w}$ to be admissible if and only if it is defined in terms of a discriminant function where w is a weight vector that is learned and $\psi$ is a feature mapping function:
+
+\begin{equation*}
+h_{w}(\theta) = \argmax{o_{1}} \underbrace{w_{1}v_{1}(\theta_{1},o_{1})}_{\text{correlates to value}} + \underbrace{w_{-1}^T \psi(\theta_{-1},o_{1})}_{\text{correlates to - price}}
+\end{equation*}
+
+
+\noindent This basically means for agent 1 the outcome $o_{1}$ is choosen that maximizes his utility. (e.g. if the price is higher than his value, then agent 1 would rather not be allocated and therefore $o_{1}=0$ is ideal) 
+
+\noindent We can see that the first term only depends on the type of agent 1 and increases in its valuation for outcome $o_{1}$, while the remaining terms ignore $\theta_{1}$ entirely. This restriction allows us to directly infer \emph{agent-independent prices} from a trained classifier which is known to be a property a \emph{strategyproof} mechanism has to satisfy.
+
+
+\noindent From this classifier $h_{w}$ we can define the associated price function for agent 1:
+
+\begin{equation*}
+	t_{w}(\theta_{-1}, o_{1}) = - \frac{1}{w_{1}} w_{-1}^T \psi(\theta_{-1},o_{1})
+\end{equation*}
+
+\noindent and because of agent symmetry, we can obtain the complete payment rule $p_{w}(\theta)$ by plugging in this price-function from each agent:
+
+\begin{equation*}
+	p_{w}(\theta) = (t_{w}(\theta_{-1},g_{1}(\theta)), t_{w}(\theta_{-2},g_{2}(\theta)),..., t_{w}(\theta_{-n},g_{n}(\theta)))
+\end{equation*}
+
+\subsection{The Classifier in the Single Item Auction}
+\noindent In our example of the \emph{Single Item Auction} the structure of the classifier has to make sure that the outcome $o_{i}$ matching the outcome rule $g(\theta)$ has to be optimal for every agent i. Concretely this means when agent 1 has a higher valuation for the item than the other agents, then the outcome $o_{1} = 1$ (allocate the item to agent 1) needs to maximize the classifier. Otherwise outcome $o_{1}=0$ (not allocate the item to agent 1) needs to maximize the classifier.
+
+
+\noindent In our example this can be achieved by setting: 
+\begin{equation*}
+	w_{1} = 1 \text{\quad and\quad} w_{-1}^T \psi(\theta_{-1},o_{1})= 
+	\begin{cases}
+	- max(\theta_{-1})& \text{if } o_{1} = 1\\
+	0              & \text{if } o_{1} = 0
+	\end{cases}
+\end{equation*}
+
+\noindent As we can see when plugging this into the associated price function, this leads to the well known second price payment rule.
+
+\noindent To clarify lets consider a small \emph{Single Item Auction} instance with two agents. The optimal outcome is $o_{1}=0$ and $o_{2}=1$ both for the  outcome rule of the mechanism and for each agent individually.
+
+\begin{equation*}
+h_{w}(\theta) = \argmax{o_{i}} 1 * v_{i}(\theta_{i},o_{i}) +
+\begin{cases}
+- max(\theta_{-1})& \text{if } o_{i} = 1\\
+0              & \text{if } o_{i} = 0
+\end{cases}
+\end{equation*}
+
+\noindent
+\begin{tabular}{|c|c|c|c|c|c|}
+	\hline 
+	 & \textbf{Outcome} & \textbf{Value} & \textbf{Payment} & \textbf{Classifier} & \textbf{Optimal} \Tstrut \\ 
+	\hline 
+	 \multirow{2}{*}{Agent 1} 	&$o_{1}=1$		& 	$v_{1}(\theta_{1},1) = 6$ 	& 8	&$6 - 8 = -2$ &	\Tstrut \\\cline{2-6}
+								&$o_{1}=0$	&	$v_{1}(\theta_{1},0) = 0$	& 0	&$0 - 0 = 0$ &X	\Tstrut\\ 
+	\hline 
+	\multirow{2}{*}{Agent 2}  	&$o_{1}=1$	&	$v_{2}(\theta_{2},1) = 8$	& 6	&$8-6 = 2$	&X	\Tstrut \\	\cline{2-6}
+								&$o_{1}=0$		&	$v_{2}(\theta_{2},0) = 0$	& 0	&$0 - 0 = 0$ & \Tstrut\\ 
+	\hline 
+\end{tabular} 
+
+
+\subsection{Consolidate Connection}
+To consolidate the connection between payment rules and multi-class classifiers lets summarize it in a sentence:
+\emph{We train a classifier to learn the outcome rule that we already know but by doing so we are able to use a special structure within the classifier to derive a payment rule which provides good incentive properties.}
+
+
+
+\newpage
+\section{Structural SVM for Mechanism Design}
+The \emph{Structural Support Vector Machine (SSVM)} is an extension of the standard \emph{SVM} learning algorithm which allows to generalize the classifier to any kind of structured output and is thus an ideal fit for the problem.
+
+\noindent In the following we look at the process of building a mechanism with the new approach step by step.
+To see how the framework can be applied, we are only considering the domain of \emph{multi-minded Combinatorial Auctions (CA)}
+
+\noindent A \emph{multi-minded CA} like a normal \emph{CA} allocates a set of r items $\{A, B, ...\}$ among agents  $\{1,..., n\}$ that can express their valuation for bundles. However, in a multi-minded CA, each agent is interested in at most b bundles for some constant b. To keep it simple we are considering a setup with three agents and three items:
+
+\begin{equation*}
+\begin{split}
+\text{\textbf{CA Setup:}} \qquad agents = \{1, 2, 3\} \qquad \& \qquad items = \{A, B, C\} \\ \qquad \rightarrow \qquad bundles = \{A, B, C, AB, AC, BC, ABC\}
+\end{split}
+\end{equation*}
+
+
+
+\subsection{Provide Outcome Rule and Type Distribution}
+
+First a type distribution has to be defined which represents agents preferences in the domain.
+In our example setup, the chosen type distribution provides parameters to control the correlation and complementarity between items.
+
+
+\noindent After that the design objective of the mechanism (e.g. social welfare, revenue or some other notion of fairness)  is selected and an outcome rule that achieves this objective is constructed. For the \emph{multi-minded CA} we use the optimal outcome rule, which selects a feasible allocation with maximum total value and thus maximizes social welfare.
+
+\newpage
+\subsection{Generate Training Data}
+As a next step we need some data to train the \emph{SSVM}. We generate training data by first sampling from the previously defined type distribution and then apply the outcome rule to the sampled types.
+
+\noindent In our \emph{multi-minded CA} with 3 items and 3 agents we draw 100 type profiles $\theta^{k}$ composed of the type of each agent $\theta_{i}^k$. The type $\theta_{i}^k$ is a vector that specifies the value of an agent i for each possible bundle. 
+And then the partial outcome rule $g_{1}$ is applied to the type profile to obtain the outcome for agent 1 $o_{1}^{k}$.
+The k-th type profile and outcome build together a training sample $(\theta^{k}, o_{1}^{k})$.
+
+
+\noindent
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+	\hline 
+	\textbf{Sample } $(\theta^{k}, o_{1}^{k})$\Tstrut &\textbf{A } $i$ & \textbf{Type }  $\theta_{i}^k$ & \textbf{Outcome } $o_{1}^k$ \\ 
+	\hline 
+	 \multirow{3}{*}{\shortstack[c]{$k = 1$ \\ $\rightarrow (\theta^1, o_{1}^{1})$}} &	1 &$\theta_{1}^1 = (0, 4, 4, 4, 4, 4, 4, 4)$ \Tstrut & \multirow{3}{*}{$g_{1}(\theta^1) = o_{1}^{1}= 010$}\\ 
+	&	2 &$\theta_{2}^1 = (0, 2, 2, 2, 6, 6, 6, 6)$ &  \\ 
+	&	3 &$\theta_{3}^1 = (0, 2, 2, 2, 4, 4, 4, 6)$ \Bstrut &  \\ 
+	\hline
+	\multicolumn{4}{|c|}{.} \\
+	\multicolumn{4}{|c|}{.} \\
+	\hline 
+	\multirow{3}{*}{\shortstack[c]{$k = 100$ \\ $\rightarrow (\theta^{100}, o_{1}^{100})$}} &	1 &$\theta_{1}^{100} = (0, 2, 2, 2, 4, 4, 4, 6)$  \Tstrut& \multirow{3}{*}{$g_{1}(\theta^{100}) = o_{1}^{100}= 000$}\\ 
+	&	2 &$\theta_{2}^{100} = (0, 2, 2, 2, 6, 6, 6, 6)$ &  \\ 
+	&	3 &$\theta_{3}^{100} = (0, 4, 4, 4, 4, 4, 4, 4)$ \Bstrut &  \\ 
+	\hline 
+	\multicolumn{4}{l}{$\theta_{i}^k = (v_{i}(\emptyset),v_{i}(A),v_{i}(B),v_{i}(C),v_{i}(AB),v_{i}(AC),v_{i}(BC),v_{i}(ABC))$\Tstrut} \\ 
+\end{tabular} 
+\end{center}
+ 
+\subsection{Define Required Information for SSVM}
+
+A few parameters and configurations need to be defined in order to use a \emph{Structural Support Vector Machine}. We will settle for a brief overview just to get an intuition for what a mechanism designer has to provide.
+
+\paragraph{Attribute map $\chi$} is a function that generates an attribute vector that combines input and output data into a single object. 
+
+\noindent In our example of the CA the attribute map needs to combine agents types and the outcome into a single vector. There are multiple possibilities explored by the authors but we focus on one version where we stack vectors $\theta_{i} \setminus o_{1}$, obtained from $\theta_{i}$ by setting the entries for all bundles that intersect with $o_{1}$ to 0. This captures the fact that agent i cannot be allocated any of the bundles that intersect with $o_{1}$ if $o_{1}$ is allocated to agent 1.
+ 
+\noindent Here in the example we see that each bundle that contains the item B which is part of the outcome $o_{1}$, has a value of 0.
+
+\setcounter{MaxMatrixCols}{16}
+\begin{equation*}
+\chi(\theta_{-1}, o_{1})=\begin{bmatrix}
+\theta_{2} \setminus  o_{1} \\
+\theta_{3} \setminus  o_{1}  \\
+\end{bmatrix} \qquad\rightarrow\qquad
+\end{equation*}
+\begin{equation*}
+\chi(\theta_{-1}, 010)=\begin{bmatrix}
+0 & 2 & 0 & 2 & 0 & 6 & 0 & 0 & 0 & 2 & 0 & 2 & 0 & 4 & 0 & 0\\
+\end{bmatrix} ^{T}
+\end{equation*}
+
+\paragraph{Kernel Function} The computational efficiency of a \emph{Support Vector Machine} comes from a mathematical trick in the dual formulation of the optimization problem where instead of computing the feature map $\psi$ directly, the feature map only appears in a special form that can be replaced with a kernel function.
+There are a lot of different possible kernels but as an example we take a brief look at a \emph{polynomial kernel}:
+\begin{equation*}
+K_{polyd}(z, z') = \langle z , z' \rangle^{d}\text{ , } d \in \mathbb{N}^{+} \qquad\rightarrow\qquad  \langle \chi(\theta_{-1}, 010), \chi(\theta_{-1}, 111) \rangle^{d} = 0
+\end{equation*}
+
+\paragraph{Parameter} In addition some training parameters such as the regularization parameter C, and a kernel parameter d have to be defined.
+
+\subsection{Solve the Optimization Problem of the SSVM}
+Training a \emph{SSVM} is nothing more than solving a constraint optimization problem. So after all the required information is provided, we can learn a weight vector w by plugging in the generated training data $(\theta_{1}^{k}, o_{1}^{k})$ into the following optimization problem:
+
+\begin{equation*}
+\begin{aligned}
+& \underset{w, \xi}{\text{minimize}}
+& & \frac{1}{2} \lVert \mathbf{w} \rVert^{2} + \frac{C}{l} \sum_{k=1}^{l} \xi^{k}\\
+& \text{subject to}
+& & (w_{1}v_{1}(\theta_{1}^{k}, o_{1}^{k}) + w_{-1}^{T}\psi'(\theta_{-1}^{k},o_{1}^k)) -  (w_{1}v_{1}(\theta_{1}^{k},o_{1})+w_{-1}^{T}\psi'(\theta_{-1}^{k},o_{1})) \\ & & & 
+\geq \mathcal{L}(o_{1}^{k},o_{1}) - \xi^{k}\text{ , } 	\forall k = 1,...,l \text{ , } o_{1} \in \Omega_{1} \\ & & &
+\xi^{k} \geq 0 \text{ , } 	\forall k = 1,...,l
+\end{aligned}
+\end{equation*}
+
+\subsubsection{Intuition behind Optimization Problem}
+
+\paragraph{Constraints} The first constraint basically says that the outcome $o_{1}^{k}$ of the training sample has to be better than any other outcome $o_{1}$ by some margin $\mathcal{L}$. This makes sense since we defined the classifier such that it has to select the optimal outcome.
+The error term $\xi^{k}$ makes sure that some minor miss-classifications are possible but at a cost in the objective term. This leads to a soft-margin classifier which is less prone to overfitting to the training data.
+
+\paragraph{Objective Term} Minimizing $\lVert \mathbf{w} \rVert^{2}$ is in the objective term of every \emph{SVM} and makes sure that the \textit{"width of the street"} is maximized.
+
+\subsubsection{Valid Price Function}
+\noindent If $w_{1} > 0$ then the learned weights w together with the feature map $\psi$ define a price function 	$t_{w}(\theta_{-1}, o_{1}) = - \frac{1}{w_{1}} w_{-1}^T \psi(\theta_{-1},o_{1})$ that can be used to define payments $p_{w}(\theta)$, however the constraint $w_{1} > 0$ is not enforced in the optimization problem directly for computational reasons. Instead hypothesis where the result of training is $w_{1} \leq 0$ are simply discarded.
+
+
+\subsection{Problems of the computed Payment Rule}
+The computed payment rule from the optimization might have some problems but they can be removed or significantly weakened by slightly adjusting the result. The authors presented two problems and proposed possible fixes.
+
+\paragraph{Computed payments could be negative}  One issue with the framework as stated is that the payments $p_{w}$ computed from the solution to the optimization problem could be negative. This issue can be removed by normalizing the computed payments to an area where they are all positive.
+
+
+\paragraph{Violation of individual rationality} Another issue is that agents revealing their true type might end up with negative utility and regret taking part in the mechanism. As shown in the beginning, this is called a violation of \emph{individual rationality}. The paper presents three ideas that can all be applied together to combat this issue: %TODO: Think about adding a quick description of each item
+\begin{itemize}
+	\item introduce payment offsets
+	\item adjust the loss function $\mathcal{L}$
+	\item introduce deallocation when such an IR violation occurs
+\end{itemize}
+
+\noindent Unfortunately none of them is able to completely solve the problem.
+
+\subsection{Mechanism in Action}
+When a valid payment function was found and adjusted in off-line training, then it is ready to be used in the mechanism. Whenever agents report their types, they can be plugged into the learned payment function and the payments can be computed very efficiently. 
+ 
+\noindent So in our example of the CA, agents report their valuation for the different bundles, the winner determination problem is solved and the learned payment function applied to calculate the payments.
+
+\section{Experimental Evaluation}
+The authors conducted a series of experiments over different domains and with various configurations but we will focus mainly on the most significant results in the domain of \emph{multi-minded Combinatorial Auctions}.
+
+\subsection{Metrics}
+We begin by briefly looking at the performance metrics that were used. 
+
+\paragraph{Classification Accuracy} measures the accuracy of the trained classifier in predicting the outcome. It is the fraction of where predicted outcome matches the actual outcome:
+\begin{equation*}
+\text{accuracy} = 100 * \frac{\sum_{k=1}^{l}\sum_{i=1}^{n}I(h_{w}(\theta_{i},\theta_{-i})=o_{i}^{k})}{nl}
+\end{equation*}
+
+\paragraph{Ex post regret} sums over the ex post regret experienced by all agents:
+\begin{equation*}
+\text{regret} = \frac{\sum_{k=1}^{l}\sum_{i=1}^{n}rgt_{i}(\theta_{i}^{k}, \theta_{-i}^{k})}{nl}
+\end{equation*}
+
+\paragraph{Individual rationality violation} measures the fraction of IR violations over all agents:
+\begin{equation*}
+\text{ir-violation} =  \frac{\sum_{k=1}^{l}\sum_{i=1}^{n}I(irv_{i}(\theta_{i},\theta_{-i})>0)}{nl}
+\end{equation*}
+
+\subsection{Performance of the framework}
+
+In general we can say that the framework performed pretty well and the most significant findings are listed below.
+
+\paragraph{Accuracy} is negatively correlated with regret and ir-violation.
+
+\paragraph{Degree of complementarity} has a major effect on the results. Regret is higher for low complementarity between the items and it generally leads to less predictable allocations.
+
+\paragraph{Choice of the outcome rule} in combination with the choice of an attribute mapping function also leads to significant differences in the outcome.
+
+\paragraph{Increase the size of the training set}  leads to overall better results. In the experiments training sets with the sizes 100, 300 and 500 were used.
+
+\paragraph{IR Fixes} payment offset, adjusting loss function and introducing deallocation decrease \emph{ir-violation} but unfortunately regret tends to move in the opposite direction.
+
+
+\section{Conclusion}
+The authors have introduced a new paradigm for computational mechanism design, in which statistical machine learning is adopted to design payment rules for given outcome rules, and have shown encouraging experimental results. However, there are still quite a few directions of interest that have to be investigated in the future.
+
+\end{document}
