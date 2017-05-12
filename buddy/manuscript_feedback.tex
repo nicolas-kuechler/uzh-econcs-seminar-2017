@@ -1,0 +1,141 @@
+\documentclass[]{article}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage[mode=buildnew]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+\pgfplotsset{compat=newest}
+
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Java,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3
+}
+
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{max}}\;}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+
+%opening
+\title{Manuscript: Fixed and Market Pricing \\for Cloud Services}
+\author{ by Mirko Richter \\ Feedback by Nicolas K\"uchler}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{General}
+\subsection{Methodology}
+I started by reading the manuscript before looking into the paper in order to take the perspective of a person sitting in the audience who has potentially never heard of the specific problem but has some background from the course \emph{Economics and Computation}.
+
+\subsection{General Feedback}
+Overall I fear that it might be difficult to get all the content across within twenty minutes. Especially because
+the manuscript contains a lot of technical proofs that are not easy to follow by just reading them once, so I think you might lose some listeners early and they won't be able to catch up.
+
+I would recommend to reduce the number of proofs and stay more on an intuitive level but instead focus more on explaining the rest of the content in more detail. Because in my opinion the goal of the talk should be to get the idea and findings across rather than the details.
+
+\subsection{Remark about Feedback}
+All the mentioned points in the feedback are just recommendations and I tried to formulate them as such, but repeating this over and over again makes it really repetitive. So whenever I omitted the \textit{"I would recommend..."} I still meant it. 
+Large parts of your manuscript are well written but here I mainly focus on the things I think can be improved, so don't take it as too negative.
+
+\section{Feedback per Section}
+In the following I will go through all your sections and give my feedback.
+\subsection{Introduction}
+\begin{itemize}
+\item wait with the main contribution of the paper for a later section and use there the example of what previous work has done and why this complexity isn't necessary.
+\item omit the \emph{Amazon} part here, or reformulate it more in a way to see that this is a relevant topic. Because right now, you already give a hint of what the result is going to be by saying: \textit{"...with ideas why Amazon uses the hybrid version"}.  
+\item figure 1 is difficult to read because you haven't got a description what the different columns stand for. I would leave it out because seeing the prices on \emph{Amazon} doesn't add much value.
+\end{itemize}
+
+\subsection{Model}
+\begin{itemize}
+	\item add a new section: \emph{2 Preliminaries} where you start with a short introduction of queueing theory (What is a queue? What is $\lambda$? What is $\mu$? What does GI/GI/$\infty$ stand for?). And maybe give a quick reminder of the revelation principle and revenue equivalence theorem.
+	\item in the section \emph{Model} add subsections for the general model, PAYG model and Spot Market model to give it a bit more structure
+	\item mention that the value is for completing a job
+	\item be really clear what the waiting costs are, because once you call \textit{cw} waiting costs and once only \textit{c}
+	\item I would recommend to explain the different parts of the payoff in context of the whole formula: (eg arrows to see  that w is the waiting time that is service time + queueing time)
+	\begin{equation*}
+	\max v_{i} - cw - m
+	\end{equation*}
+	\item write a 1-2 sentence explaining figure 2
+\end{itemize}
+
+\subsection{Spot Pricing}
+\begin{itemize}
+	\item explain cutoffs: regardless of the auction mechanism, jobs in the spot market with higher waiting costs: 1. pay more 2. wait less. $\rightarrow$  both independent of the job class. The job class (value) matters only in determining if a job participates in the Spot Market but this has the form of a simple cutoff: 
+	
+	\begin{equation*}	\text{participate in spot market} =
+	\begin{cases}
+	\text{yes} & \text{IF waiting cost} \leq \text{cutoff}\\
+	\text{no} & \text{ELSE}
+	\end{cases}
+	\end{equation*}
+\item mention that job reports it's type (v,c) and \\ 
+IF he participates in Spot Market, he has:\\
+$\mathop{\mathbb{E}}$(Waiting Time) = $\tilde{w}(v,c)$\\
+$\mathop{\mathbb{E}}$(Payment) = $\tilde{m}(v,c)$\\
+$\rightarrow$ expected payment and waiting time could depend on v, but it is shown that it does not  $\rightarrow$ class-independent expected waiting time $\tilde{w}(c)$ and expected payment $\tilde{m}(c)$.
+\item before \emph{Lemma 2}: "now we show that jobs with higher waiting cost c:\\  1. Pay More 2. Wait Less" Because \emph{Lemma 2} is stated quite formally it is good to get an intuition what it describes. The proof is suited for the talk, just make sure that you explain it step by step (eg. left side is the payment for truthful report, right side payment for false report, due to IC constraint, we know that truthful payment needs to be smaller...)
+\item add more structure to the assumptions (eg itemize)
+\item properties of w(c,\textbf{c}): I would stick with the intuitive description what it has to satisfy instead of writing it down formally, because the time needed to understand and follow the formal description is too much in my opinion
+\item I would omit the proof of Lemma 5 and instead explain in more detail why (3) has to hold and then mention that it is shown that (4) is a necessary condition for it.
+\item the last paragraph is a really important finding of the paper and I would try to reformulate it a bit to make it really easy to understand when hearing it only  once.
+\end{itemize}
+
+\subsection{Revenue and Equilibria for isolated Markets}
+\begin{itemize}
+	\item add more structure by adding subsections for PAYG only and Spot Market only
+	\item explain why the expected payoff is $v_{i}-(p+c)/\mu$
+	\item show $R^{PAYG}$ and I see there two options, either explain it a bit less formally and in more detail, or just mention "it is shown that $R^{PAYG}$ is a function of p that sums over the effective arrival rate of the classes..."
+	\item do a similar explanation for the spot market in isolation and mention that there exists a unique cutoff vector (theorem 1), but I certainly wouldn't proof it in your talk, because even the authors decided to only add it in the appendix.
+\end{itemize}
+
+\subsection{Revenue and Equilibria for Hybrid Market}
+\begin{itemize}
+	\item I would maybe reformulate the first sentence a bit to emphasize what kind of options a job has in the hybrid market (PAYG, SPOT, BALKING) and that depending on price p the job makes his decision.
+\end{itemize}
+
+\subsection{Revenue Comparison}
+\begin{itemize}
+	\item I would add the theoretical revenue analysis of theorem 3 (not proofing it in the talk just telling that in this case, it is shown that PAYG dominates HYBRID) and then you can make a nice transition that even though theorem 3 is pretty restricted, there is evidence from Simulations that this result holds more broadly.
+	\item I would add more structure (Theoretical / Simulation 1 / Simulation 2) and for the simulations explain the setup and the goal
+	\item make sure that in the talk your explaining the findings directly on the graph by pointing at the relevant position
+	\item you wrote: \textit{The only point where hybrid outperforms PAYG is the exact point of p, where all jobs from class 2 bulk in the isolated PAYG market.} I don't think this is true, it is not the exact point where they balk, it is around the point they balk.
+	\item explain why the setting of Simulation 2 would intuitively be the ideal setting for the hybrid case
+\end{itemize}
+
+\subsection{Conclusion}
+\begin{itemize}
+	\item you skipped the welfare analysis and model relaxing sections almost completely, if you have some time left after the adjustments, you could also spend 2-3 sentence on each topic. I think especially the model relaxing section shows that even though quite a bunch of assumptions where made, that removing most of them doesn't change the result completely.
+	\item I think you formulated the results a bit to strongly. In the paper they say usually PAYG only is better than hybrid, but in rare cases hybrid can be better. From reading your conclusion it sounds like PAYG only is always better.
+	\item I really like how you connect back to the initial question of which one is better, you should keep that definitely in because it's kind of the main question of the paper and the thing everybody should take away from your talk
+	\item I would maybe recap what result was shown analytically and what was suggested looking at simulation results
+\end{itemize}
+
+\end{document}
