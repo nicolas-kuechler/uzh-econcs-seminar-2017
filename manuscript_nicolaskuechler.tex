@@ -122,14 +122,6 @@ rgt_{i}(\theta_{i},\theta'_{-i}) = \max\limits_{\theta'_{i} \in \Theta_{i}}
 \noindent When a mechanism has zero \emph{ex-post regret} for all inputs $(\theta_{i}, \theta_{-i})$, then it is \emph{strategyproof}. Apart from that, \emph{ex-post regret} does not have any further known direct implications for equilibrium properties. The support for \emph{expected ex-post regret} rather comes from a simple model, where agents face a certain cost for strategic behaviour. If this cost is higher than the expected gain, then the agents are assumed to behave truthfully.
 
 
-\subsection{Ex-Post Violation of IR}
-Another concept that is useful to understand some of the material covered later is the \emph{ex-post violation of individual rationality}. It occurs, when an agent ends up with negative utility when reporting his true type. This means that he would have preferred not taking part in the mechanism at all. Ending up with a non-negative utility simply leads to a violation of zero. Formally, the \emph{ex-post violation of individual rationality} of agent i, given true type $\theta_{i} \in \Theta_{i}$ and the other agents reported types $\theta'_{-i} \in \Theta_{-i}$ is:
-
-\begin{equation*} 
-irv_{i}(\theta_{i}, \theta_{-i}') = |min(u_{i}((\theta_{i}, \theta_{-i}'), \theta_{i}),0)|
-\end{equation*}
-
-
 \section{Payment Rules from Multi-Class Classifiers}
 
 To show how finding a payment rule with good incentive properties is connected with the multi-class classification problem is really the essence of the paper but also not that straightforward to understand. Before building the connection, we start by looking at characteristics of a strategyproof mechanism and introduce the concept of a multi-class classifier.
@@ -170,7 +162,7 @@ h_{w}(\theta) \in \argmax{o_{i} \in \Omega_{i}} f_{w}(\theta,o_{i})
 \subsection{Connection}
 Assuming agent symmetry, we build the connection by focusing on a partial outcome rule $g_{1}$ and a classifier $h_{w}$ for agent 1. Agent symmetry means informally that without loss of generality the problem is the same for every agent and it is thus enough to only consider it from the perspective of one agent.
 
-\noindent Now let's look at the connection between truthful mechanisms and multi-class classifier. 
+\noindent Now let's look at the connection between truthful mechanisms and multi-class classifiers. 
 
 
 \noindent Comparing classifier and \emph{agent-optimizing outcome} property we see that they are really similar;
@@ -242,23 +234,23 @@ w_{1} = 1 \text{\quad and\quad} w_{-1}^T \psi(\theta_{-1},o_{1})=
 \noindent To clarify lets consider a small \emph{Single Item Auction} instance with two agents. The optimal outcome is $o_{1}=0$ and $o_{2}=1$ both for the  outcome rule of the mechanism and for each agent individually.
 
 \begin{equation*}
-h_{w}(\theta) = \argmax{o_{i}} 1 * v_{i}(\theta_{i},o_{i}) +
-\begin{cases}
+h_{w}(\theta) = \argmax{o_{i}} \underbrace{1 * v_{i}(\theta_{i},o_{i})}_{\text{left part}} +
+\underbrace{\begin{cases}
 - max(\theta_{-1})& \text{if } o_{i} = 1\\
 0              & \text{if } o_{i} = 0
-\end{cases}
+\end{cases}}_{\text{right part}}
 \end{equation*}
 
 \noindent
 \begin{tabular}{|c|c|c|c|c|c|}
 	\hline 
-	& \textbf{Outcome} & \textbf{Value} & \textbf{Payment} & \textbf{Classifier} & \textbf{Optimal} \Tstrut \\ 
+	& \textbf{Outcome} & \textbf{Left Part} & \textbf{Right Part} & \textbf{Classifier} & \textbf{Optimal} \Tstrut \\ 
 	\hline 
 	\multirow{2}{*}{Agent 1} 	&$o_{1}=1$		& 	$v_{1}(\theta_{1},1) = 6$ 	& 8	&$6 - 8 = -2$ &	\Tstrut \\\cline{2-6}
 	&$o_{1}=0$	&	$v_{1}(\theta_{1},0) = 0$	& 0	&$0 - 0 = 0$ &X	\Tstrut\\ 
 	\hline 
-	\multirow{2}{*}{Agent 2}  	&$o_{1}=1$	&	$v_{2}(\theta_{2},1) = 8$	& 6	&$8-6 = 2$	&X	\Tstrut \\	\cline{2-6}
-	&$o_{1}=0$		&	$v_{2}(\theta_{2},0) = 0$	& 0	&$0 - 0 = 0$ & \Tstrut\\ 
+	\multirow{2}{*}{Agent 2}  	&$o_{2}=1$	&	$v_{2}(\theta_{2},1) = 8$	& 6	&$8-6 = 2$	&X	\Tstrut \\	\cline{2-6}
+	&$o_{2}=0$		&	$v_{2}(\theta_{2},0) = 0$	& 0	&$0 - 0 = 0$ & \Tstrut\\ 
 	\hline 
 \end{tabular} 
 
@@ -318,7 +310,7 @@ The computed payment rule from the optimization might have some problems but the
 \paragraph{Computed payments could be negative}  One issue with the framework as stated is that the payments $p_{w}$ computed from the solution to the optimization problem could be negative. This issue can be removed by normalizing the computed payments to an area where they are all positive.
 
 
-\paragraph{Violation of individual rationality} Another issue is that agents revealing their true type might end up with negative utility and regret taking part in the mechanism. As shown in the beginning, this is called a violation of \emph{individual rationality}. The paper presents three ideas that can all be applied together to combat this issue:
+\paragraph{Violation of individual rationality} Another issue is that agents revealing their true type might end up with negative utility and regret taking part in the mechanism. This is called a violation of \emph{individual rationality (IR)}. The paper presents three ideas that can all be applied together to combat this issue:
 \begin{itemize}
 	\item introduce payment offsets
 	\item adjust the loss function $\mathcal{L}$
